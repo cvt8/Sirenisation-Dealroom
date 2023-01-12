@@ -1,0 +1,1045 @@
+---
+title: "DEALROOM"
+author: "Valentin DILLIES"
+date: "12/03/2020"
+output: html_document
+---
+
+# Librairie
+
+```{r}
+install.packages("sas7bdat")
+install.packages("dplyr")
+install.packages("broom")
+install.packages("generics")
+install.packages("lifecycle")
+install.packages("tidyr")
+install.packages("backports")
+install.packages("DBI")
+install.packages("dbplyr")
+install.packages("gtable")
+install.packages("colorspace")
+install.packages("munsell")
+install.packages("scales")
+install.packages("lazyeval")
+install.packages("writexl")
+install.packages("withr")
+install.packages("ggplot2")
+install.packages("httr")
+install.packages("jsonlite")
+install.packages("stringi")
+install.packages("stringr")
+install.packages("lubridate")
+install.packages("modelr")
+install.packages("cellranger")
+install.packages("readxl")
+install.packages("fs")
+install.packages("reprex")
+install.packages("rvest")
+install.packages("xml2")
+install.packages("rstudioapi")
+install.packages("tidyverse")
+install.packages("readr")
+install.packages("R6")
+install.packages("crayon")
+install.packages("pillar")
+install.packages("tibble")
+install.packages("pkgconfig")
+install.packages("rlang")
+install.packages("hms")
+install.packages("magrittr")
+install.packages("forcats")
+install.packages("Rcpp")
+install.packages("haven")
+install.packages("rSymPy")
+```
+
+```{r}
+library(sas7bdat)
+library(dplyr)
+library(broom)
+library(generics)
+library(lifecycle)
+library(tidyr)
+library(backports)
+library(DBI)
+library(dbplyr)
+library(gtable)
+library(colorspace)
+library(munsell)
+library(scales)
+library(lazyeval)
+library(writexl)
+library(withr)
+library(ggplot2)
+library(httr)
+library(jsonlite)
+library(stringi)
+library(stringr)
+library(lubridate)
+library(modelr)
+library(cellranger)
+library(readxl)
+library(fs)
+library(reprex)
+library(rvest)
+library(xml2)
+library(rstudioapi)
+library(tidyverse)
+library(readr)
+library(R6)
+library(crayon)
+library(pillar)
+library(tibble)
+library(pkgconfig)
+library(rlang)
+library(hms)
+library(magrittr)
+library(forcats)
+library(Rcpp)
+library(haven)
+library(rJava)
+library(rSymPy)
+```
+
+# Données Dealroom
+
+Clear les données Dealroom
+```{r}
+D1 = read.csv("D:/TRAVAIL/eCASDDGE_B_HADJIBE/Data/Données Dealroom/La French Tech Companies.csv")
+D2 = read.csv("D:/TRAVAIL/eCASDDGE_B_HADJIBE/Data/Données Dealroom/La French Tech France_Exits.csv")
+D3 = read.csv("D:/TRAVAIL/eCASDDGE_B_HADJIBE/Data/Données Dealroom/La French Tech France_Funding Rounds.csv")
+
+M = merge(D1, D2, by = )
+
+
+A = D1[which(D1$NAME == "SeLoger"),]
+B = D3[which(D3$NAME == "SeLoger"),]
+C = D2[which(D2$TARGET == "SeLoger"),]
+
+D1 = D3
+
+D1$NAME = str_to_upper(D1$NAME)
+D1$HQ.CITY = str_to_upper(D1$HQ.CITY)
+
+index = which(duplicated(D1$NAME))
+D1 = D1[-index,]
+
+D = data.frame(D1$NAME, D1$WEBSITE, D1$HQ.CITY, D1$EMPLOYEES..2016.2017.2018.2019.)
+D = data.frame(D, 0, 0, NA, NA)
+colnames(D) = c("NAME", "WEBSITE", "CITY", "EMPLOYEES", "EMPLOYEES17", "EMPLOYEES19", "CAT17", "CAT19")
+
+a = str_split(D$EMPLOYEES, ";")
+
+for (k in 1:dim(D)[1]) {
+  D$EMPLOYEES17[k] = as.numeric(a[[k]][2])
+  D$EMPLOYEES19[k] = as.numeric(a[[k]][4])
+}
+
+index = which(is.na(D$EMPLOYEES17))
+D$EMPLOYEES17[index] = 0
+
+index = which(is.na(D$EMPLOYEES19))
+D$EMPLOYEES19[index] = 0
+
+D$CAT17[which(D$EMPLOYEES17 == 0)] = "VOID"
+D$CAT17[which(D$EMPLOYEES17 > 0)] = "PME"
+D$CAT17[which(D$EMPLOYEES17 >= 250)] = "ETI"
+D$CAT17[which(D$EMPLOYEES17 >= 5000)] = "GE"
+
+D$CAT19[which(D$EMPLOYEES19 == 0)] = "VOID"
+D$CAT19[which(D$EMPLOYEES19 > 0)] = "PME"
+D$CAT19[which(D$EMPLOYEES19 >= 250)] = "ETI"
+D$CAT19[which(D$EMPLOYEES19 >= 5000)] = "GE"
+
+D = D[, -c(4,7,8)]
+
+rm(index, a, D1, k)
+```
+
+Clear les caractères spéciaux
+```{r}
+D = data.frame(D, NA)
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "-", " "))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "É", "E"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "È", "E"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ê", "E"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ã‰", "E"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ã©", "E"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ãª", "E"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ã¨", "E"))
+#D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ã", "A"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ã®", "I"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Â", "A"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "À", "A"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "@", "A"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ç", "C"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "'", " "))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "SAINT", "ST"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "Ã¢", "A"))
+D <- D %>% mutate(CITY = str_replace_all(D$CITY, "LA DÃƑA©FENSE", "LA DEFENSE"))
+
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "-", " "))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "É", "E"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "È", "E"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ê", "E"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ã‰", "E"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ã®", "I"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ã¨", "E"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ã©", "E"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ãª", "E"))
+#D <- D %>% mutate(city2 = str_replace_all(D$CITY, "Ã", "A"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Â", "A"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "À", "A"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "@", "A"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ç", "C"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "'", " "))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "SAINT", "ST"))
+D <- D %>% mutate(NAME = str_replace_all(D$NAME, "Ã¢", "A"))
+
+colnames(D)[6] = "departement"
+D$departement = NA
+```
+
+```{r}
+index = c(730, 2027, 2924, 3054, 6407, 5738, 5644, 6521, 7795)
+D = D[-index, ]
+```
+
+Codes départements
+```{r}
+# codes_postaux = read_sas("D:/TRAVAIL/eCASDDGE_B_HADJIBE/Data/code_postaux.sas7bdat", col_select = c("Nom_commune", "Code_postal"))
+# codes_postaux$Code_postal = as.numeric(str_sub(codes_postaux$Code_postal, 1, 2))
+# colnames(codes_postaux)[2] = "departement"
+
+poste = read.csv("//casd/casdfs/LibreAcces/Nomenclatures géographiques/Codes géographiques/Codes postaux (data.gouv.fr)/code_postaux_v201703.csv", sep = ";")
+poste = poste[, c(2, 3)]
+poste$Code_postal = floor(poste$Code_postal *0.001)
+colnames(poste)[2] = "departement"
+```
+
+Remplissage de la variable "departement"
+```{r}
+for (k in 1:dim(D)[1]) {
+  
+  index = which(poste$Nom_commune == D$CITY[k])
+  if(length(index) > 0){
+    D$departement[k] = poste$departement[index][1]
+  }
+  
+  if(D$CITY[k] == "PARIS"){
+    D$departement[k] = 75
+  }
+  
+  if(D$CITY[k] == "LYON"){
+    D$departement[k] = 69
+  }
+  
+  if(D$CITY[k] == "MARSEILLE"){
+    D$departement[k] = 13
+  }
+  
+}
+rm(index, k)
+```
+
+# Quelques stats sur les entreprises présentes dans Dealroom
+Nombre de PME/ETI/GE en 2017 dans les données Dealroom
+```{r}
+length(which(D$CAT17 == "VOID"))
+length(which(D$CAT17 == "PME"))
+length(which(D$CAT17 == "ETI"))
+length(which(D$CAT17 == "GE"))
+```
+
+Nombre de PME/ETI/GE en 2019 dans les données Dealroom
+```{r}
+length(which(D$CAT19 == "VOID"))
+length(which(D$CAT19 == "PME"))
+length(which(D$CAT19 == "ETI"))
+length(which(D$CAT19 == "GE"))
+```
+
+Nombre de boîte qui n'ont pas changé de taille 
+```{r}
+length(which(D$CAT19 == D$CAT17))
+```
+
+# Données FARE
+
+```{r}
+colonnes_fare2017 = c(#"APE_DIFF", #L'APE du répertoire sert essentiellement au calcul des agrégats composites. Pour calculer des agrégats par secteur d'activité en tabulant les données du Fare, il convient d'utiliser l'APE de diffusion (APE_DIFF).
+  #"ape_rep", #"actinet_tot", #Total actif net
+  #"b100", #Total actif brut (CO)
+  #"b300", #Total passif
+  "A21", #Secteur
+  "categorie_entreprise", # remplace CATEGORIE à partir de 2017
+  "denom", #Dénomination de la personne morale ou de l exploitation en commun
+  #"depcom", #Code commune INSEE du siège sociale différent du code postal
+  #"diff_ep", #Pour une diffusion en entreprise, choisir le filtre : DIFF_EP=1
+  "diff_ul", #Pour une diffusion en unité légale (UL), choisir le filtre : DIFF_UL=1
+  "ent_cre_daaaammjj", #Date de création de l'entreprise
+  #"F001", #bénéfice (ajout 2017)
+  #"f100", #bénéfice comptable de l'exercice
+  #"id_groupe", #Identifiant du groupe (de sociétés) d'appartenance (ajout 2017)
+  #"id_tg", #Identifiant de la tête de groupe (ajout 2017)
+  #"r100", #Résultat comptable (bénéfice ou perte)
+  "siren", #Siren (de l'UL ou de l'EP)
+  #"siren_ent", #Identifiant de l'entreprise à laquelle est rattachée l'UL (ajout 2017)
+  #"redi_e001", #effectif salariés au 31-12 (CLAP) : non diffusé en 2016 et 2017
+  "redi_e200", #etp (source dads ou estimé à partir de redi_e001)
+  "redi_r310", #CA net total(FL) résultant de la réconciliation enquêtes/source fiscales
+  #"stat_cj" #code catégorie juridique statistique
+  "depcom"
+)
+
+FARE <- read_sas("//casd.fr/casdfs/Projets/CASDDGE/Data/Statistique annuelle d'entreprise_FARE_2017/fare2017meth2017.sas7bdat"
+                 , col_select = colonnes_fare2017
+                 #, n_max = 10
+)
+
+colnames(FARE)[1] = "NAME"
+
+FARE = FARE[which(FARE$diff_ul == 1),]
+
+FARE$ent_cre_daaaammjj = as.numeric(str_sub(FARE$ent_cre_daaaammjj,  1,  4))
+rm(colonnes_fare2017)
+```
+
+```{r}
+FARE$depcom = str_sub(FARE$depcom, 1, 2)
+```
+
+# Données SIREN 2018
+
+Données
+```{r}
+SIREN <- read_sas("D:/DONNEES/SIRENE/LISTE/siren2018_08.sas7bdat"
+                 , col_select = c("SIREN", "L1_NOMEN", "L6_POST", "ZEMET", "TEFEN", "ORIGINE")
+                 #, n_max = 10
+)
+
+colnames(SIREN) = c("siren", "NAME", "ADRESSE", "DEP", "TEFEN", "ORIGINE")
+#SIREN$CITY = str_sub(SIREN$CITY, start = 7)
+SIREN$DEP = as.numeric(SIREN$DEP)
+```
+
+<!-- Clear nom des villes de SIREN18 -->
+<!-- ```{r} -->
+<!-- unique(SIREN$CITY[str_detect(SIREN$CITY, "MARSEILLE")]) -->
+
+<!-- index = str_detect(SIREN$CITY, "MARSEILLE") -->
+<!-- index2 = str_detect(SIREN$CITY, "MARSEILLE EN BEAUVAISIS") -->
+<!-- index3 = str_detect(SIREN$CITY, "MARSEILLES LES AUBIGNY") -->
+<!-- index4 = str_detect(SIREN$CITY, "MARSEILLETTE") -->
+<!-- index5 = str_detect(SIREN$CITY, "MARSEILLE CHEQUES") -->
+<!-- index6 = str_detect(SIREN$CITY, "MARSEILLES-LES-AUBIGNY") -->
+
+<!-- SIREN$CITY[index] = "MARSEILLE" -->
+<!-- SIREN$CITY[index2] = "MARSEILLE EN BEAUVAISIS" -->
+<!-- SIREN$CITY[index3] = "MARSEILLES-LES-AUBIGNY" -->
+<!-- SIREN$CITY[index4] = "MARSEILLETTE" -->
+<!-- SIREN$CITY[index5] = "MARSEILLE CHEQUES" -->
+<!-- SIREN$CITY[index6] = "MARSEILLES-LES-AUBIGNY" -->
+
+<!-- unique(SIREN$CITY[str_detect(SIREN$CITY, "MARSEILLE")]) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- unique(SIREN$CITY[str_detect(SIREN$CITY, "PARIS")]) -->
+
+<!-- index = str_detect(SIREN$CITY, "PARIS") -->
+<!-- index2 = str_detect(SIREN$CITY, "LE TOUQUET PARIS PLAGE") -->
+<!-- index3 = str_detect(SIREN$CITY, "DAMPARIS") -->
+<!-- index4 = str_detect(SIREN$CITY, "PARISOT") -->
+<!-- index5 = str_detect(SIREN$CITY, "PARIS LA DEFENSE") -->
+<!-- index6 = str_detect(SIREN$CITY, "BOULOUPARIS") -->
+<!-- index7 = str_detect(SIREN$CITY, "CORMEILLES EN PARISIS") -->
+<!-- index8 = str_detect(SIREN$CITY, "SEYSSINET PARISET") -->
+<!-- index9 = str_detect(SIREN$CITY, "VILLEPARISIS") -->
+<!-- index10 = str_detect(SIREN$CITY, "FONTENAY EN PARISIS") -->
+
+<!-- SIREN$CITY[index] = "PARIS" -->
+<!-- SIREN$CITY[index2] = "LE TOUQUET PARIS PLAGE" -->
+<!-- SIREN$CITY[index3] = "DAMPARIS" -->
+<!-- SIREN$CITY[index4] = "PARISOT" -->
+<!-- SIREN$CITY[index5] = "PARIS LA DEFENSE" -->
+<!-- SIREN$CITY[index6] = "BOULOUPARIS" -->
+<!-- SIREN$CITY[index7] = "CORMEILLES EN PARISIS" -->
+<!-- SIREN$CITY[index8] = "SEYSSINET PARISET" -->
+<!-- SIREN$CITY[index9] = "VILLEPARISIS" -->
+<!-- SIREN$CITY[index10] = "FONTENAY EN PARISIS" -->
+
+<!-- unique(SIREN$CITY[str_detect(SIREN$CITY, "PARIS")]) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- unique(SIREN$CITY[str_detect(SIREN$CITY, "LYON")]) -->
+
+<!-- index = str_detect(SIREN$CITY, "LYON") -->
+<!-- index2 = str_detect(SIREN$CITY, "STE FOY LES LYON") -->
+<!-- index3 = str_detect(SIREN$CITY, "BEAUVOIR EN LYONS") -->
+<!-- index4 = str_detect(SIREN$CITY, "SAINTE FOY LES LYON") -->
+<!-- index5 = str_detect(SIREN$CITY, "LYONS LA FORET") -->
+<!-- index6 = str_detect(SIREN$CITY, "CHAZELLES SUR LYON") -->
+<!-- index7 = str_detect(SIREN$CITY, "COGNAT LYONNE") -->
+<!-- index8 = str_detect(SIREN$CITY, "BEAUFICEL EN LYONS") -->
+
+
+<!-- SIREN$CITY[index] = "LYON" -->
+<!-- SIREN$CITY[index2] = "SAINTE FOY LES LYON" -->
+<!-- SIREN$CITY[index3] = "BEAUVOIR EN LYONS" -->
+<!-- SIREN$CITY[index4] = "SAINTE FOY LES LYON" -->
+<!-- SIREN$CITY[index5] = "LYONS LA FORET" -->
+<!-- SIREN$CITY[index6] = "CHAZELLES SUR LYON" -->
+<!-- SIREN$CITY[index7] = "COGNAT LYONNE" -->
+<!-- SIREN$CITY[index8] = "BEAUFICEL EN LYONS" -->
+
+<!-- unique(SIREN$CITY[str_detect(SIREN$CITY, "LYON")]) -->
+
+<!-- rm(index, index2, index3, index4, index5, index6, index7, index8, index9, index10) -->
+<!-- ``` -->
+
+# Sirénisation FARE n°1 
+
+```{r}
+M = merge(FARE, D, by = "NAME", all.y =  TRUE)
+```
+
+```{r}
+DF2 = M[which(!is.na(M$siren)),]
+DNF2 = M[which(is.na(M$siren)),]
+DF2 = data.frame(DF2, NA)
+DNF2 = data.frame(DNF2, "not found")
+colnames(DF2)[13] = "siren_found"
+colnames(DNF2)[13] = "siren_found"
+```
+
+```{r}
+index = duplicated(DF2$NAME) | duplicated(DF2$NAME, fromLast = TRUE)
+
+DFu2 = DF2[!index,]
+DF2[!index,13] = "one found"
+
+DFm2 = DF2[index,]
+DF2$siren_found[index] = "many found"
+```
+
+```{r}
+index = DFu2$DEP == DFu2$departement
+
+DFu_controlled2 = DFu2[index,]
+DFu_uncontrolled2 = DFu2[!index,]
+```
+
+```{r}
+index = duplicated(DFm2$siren)
+DFm2 = DFm2[!index,]
+```
+
+```{r}
+index = duplicated(DFm2$NAME) | duplicated(DFm2$NAME, fromLast = TRUE)
+
+DFm2 = DFm2[index,]
+
+index2 = DFm2$DEP == DFm2$departement
+DFm_controlled2 = DFm2[index2,]
+DFm_uncontrolled2 = DFm2[!index2,]
+  
+DFm_uncontrolled2 = DFm_uncontrolled2[!duplicated(DFm_uncontrolled2$NAME),]
+```
+
+```{r}
+dim(DNF2)[1]
+dim(DFu_controlled2)[1]
+dim(DFu_uncontrolled2)[1]
+dim(DFm_controlled2)[1]
+dim(DFm_uncontrolled2)[1]
+```
+
+```{r}
+nb_found = dim(DFu_controlled2)[1] + dim(DFu_uncontrolled2)[1] + dim(DFm_controlled2)[1] + dim(DFm_uncontrolled2)[1]
+nb_found
+100 * nb_found / dim(D)[1]
+```
+
+```{r}
+nb_found_controlled2 = dim(DFu_controlled2)[1] + dim(DFm_controlled2)[1]
+nb_found_controlled2
+100 * nb_found_controlled2 / dim(D)[1]
+```
+
+```{r}
+N = merge(D1, FARE, by = "NAME")
+
+length(which(N$categorie_entreprise == "MICRO"))
+100 * length(which(N$categorie_entreprise == "MICRO")) / dim(N)[1]
+
+length(which(N$categorie_entreprise == "PME"))
+100 * length(which(N$categorie_entreprise == "PME")) / dim(N)[1]
+
+length(which(N$categorie_entreprise == "ETI"))
+100 * length(which(N$categorie_entreprise == "ETI")) / dim(N)[1]
+
+length(which(N$categorie_entreprise == "GE"))
+100 * length(which(N$categorie_entreprise == "GE")) / dim(N)[1]
+```
+
+```{r}
+mean(N$ent_cre_daaaammjj)
+min(N$ent_cre_daaaammjj)
+max(N$ent_cre_daaaammjj)
+
+length(which(N$ent_cre_daaaammjj > 2017))
+100 * length(which(N$ent_cre_daaaammjj > 2017)) / dim(N)[1]
+
+length(which(N$ent_cre_daaaammjj > 2012))
+100 * length(which(N$ent_cre_daaaammjj > 2012)) / dim(N)[1]
+
+length(which(N$ent_cre_daaaammjj > 2010))
+100 * length(which(N$ent_cre_daaaammjj > 2010)) / dim(N)[1]
+
+length(which(N$ent_cre_daaaammjj > 2000))
+100 * length(which(N$ent_cre_daaaammjj > 2000)) / dim(N)[1]
+```
+
+```{r}
+mean(N$redi_r310)
+min(N$redi_r310)
+max(N$redi_r310)
+
+length(which(N$redi_r310 >= 10000000))
+100 * length(which(N$redi_r310 >= 10000000)) / dim(N)[1]
+
+length(which(N$redi_r310 >= 1000000))
+100 * length(which(N$redi_r310 >= 1000000)) / dim(N)[1]
+
+length(which(N$redi_r310 >= 100000))
+100 * length(which(N$redi_r310 >= 100000)) / dim(N)[1]
+
+length(which(N$redi_r310 >= 10000))
+100 * length(which(N$redi_r310 >= 10000)) / dim(N)[1]
+
+length(which(N$redi_r310 <= 1000))
+100 * length(which(N$redi_r310 <= 1000)) / dim(N)[1]
+```
+
+```{r}
+mean(N$redi_e200)
+min(N$redi_e200)
+max(N$redi_e200)
+
+length(which(N$redi_e200 >= 100))
+100 * length(which(N$redi_e200 >= 100)) / dim(N)[1]
+
+length(which(N$redi_e200 < 100 & N$redi_e200 >= 11))
+100 * length(which(N$redi_e200 < 100 & N$redi_e200 >= 11)) / dim(N)[1]
+
+length(which(N$redi_e200 < 11 & N$redi_e200 >= 1))
+100 * length(which(N$redi_e200 < 11 & N$redi_e200 >= 1)) / dim(N)[1]
+
+length(which(N$redi_e200 == 0))
+100 * length(which(N$redi_e200 == 0)) / dim(N)[1]
+```
+
+
+# Sirénisation SIREN 2018
+
+```{r}
+N = merge(SIREN, D, by = "NAME", all.y =  TRUE)
+
+length(which(is.na(N$NAME)))
+
+dim(D)[1]
+dim(N)[1]
+length(which(duplicated(N$NAME)))
+dim(N)[1] - length(which(duplicated(N$NAME)))
+```
+
+DF : données Dealroom D pour lesquelles 1 ou plusieurs siren a été trouvé
+```{r}
+DF = N[which(!is.na(N$siren)),]
+DF = data.frame(DF, NA)
+colnames(DF)[10] = "siren_found"
+
+length(which(is.na(DF$NAME)))
+length(which(duplicated(DF$NAME)))
+dim(DF)[1] - length(which(duplicated(DF$NAME)))
+```
+
+DNF : données Dealroom D pour lesquelles aucun siren n'a été trouvé
+```{r}
+DNF = N[which(is.na(N$siren)),]
+DNF = data.frame(DNF, "not found")
+colnames(DNF)[10] = "siren_found"
+
+length(which(is.na(DNF$NAME)))
+length(which(duplicated(DNF$NAME)))
+dim(DNF)[1] - length(which(duplicated(DNF$NAME)))
+```
+
+```{r}
+dim(D)[1]
+dim(DF)[1] - length(which(duplicated(DF$NAME))) + dim(DNF)[1]
+```
+
+DFu : données Dealroom D pour lesquelles 1 unique siren a été trouvé
+DFm : données Dealroom D pour lesquelles plusieurs siren ont été trouvés
+```{r}
+index = duplicated(DF$NAME) | duplicated(DF$NAME, fromLast = TRUE)
+
+DF[!index,10] = "one found"
+DF$siren_found[index] = "many found"
+
+DFu = DF[!index,]
+DFm = DF[index,]
+
+dim(DF)[1]
+dim(DFu)[1] + dim(DFm)[1]
+```
+
+```{r}
+length(which(duplicated(DFu$NAME)))
+length(which(duplicated(DFm$NAME)))
+```
+
+Retrait des doublons "NAME-siren"
+```{r}
+index = which(duplicated(DFm$siren))
+
+DFm = DFm[-index,]
+```
+
+```{r}
+length(which(duplicated(DFm$NAME)))
+
+index = duplicated(DFm$NAME) | duplicated(DFm$NAME, fromLast = TRUE)
+B = DFm[index, ]
+```
+
+DFmu = données Dealroom many devenues finalement uniques après retrait des doublons "NAME-siren"
+DFmm = données Dealroom toujours many, "purs many"
+```{r}
+index = duplicated(DFm$NAME) | duplicated(DFm$NAME, fromLast = TRUE)
+
+DFmu = DFm[!index,]
+DFmm = DFm[index,]
+
+dim(DFm)[1]
+dim(DFmu)[1] + dim(DFmm)[1]
+length(which(duplicated(DFmu$NAME)))
+length(which(duplicated(DFmm$NAME)))
+```
+
+Sélection des many par le departement
+```{r}
+index = duplicated(DFmm$NAME) | duplicated(DFmm$NAME, fromLast = TRUE)
+dim(DFmm)[1]
+length(index)
+
+index = which(DFmm$DEP == DFmm$departement)
+
+DFmm_controlled = DFmm[index,]
+DFmm_uncontrolled = DFmm[-index,]
+
+dim(DFmm_controlled)[1]
+dim(DFmm_uncontrolled)[1]
+```
+
+Doublons dans DFmm_controlled
+```{r}
+length(which(duplicated(DFmm_controlled$NAME)))
+index = which(duplicated(DFmm_controlled$NAME))
+DFmm_controlled_clear = DFmm_controlled[-index,]
+```
+
+Contrôle des DFu et DFmu
+
+DFu_controlled : contrôlé par le departement
+DFu_uncontrolled : non contrôlé par le departement
+```{r}
+index = which(DFu$DEP == DFu$departement)
+
+DFu_controlled = DFu[index,]
+DFu_uncontrolled = DFu[-index,]
+
+dim(DFu)[1]
+dim(DFu_controlled)[1] + dim(DFu_uncontrolled)[1]
+```
+
+DFmu_controlled : DFmu contrôlé par le departement
+DFmu_uncontrolled : DFmu non contrôlé par le departement
+```{r}
+index = which(DFmu$DEP == DFmu$departement)
+
+DFmu_controlled = DFmu[index,]
+DFmu_uncontrolled = DFmu[-index,]
+
+dim(DFmu)[1]
+dim(DFmu_controlled)[1] + dim(DFmu_uncontrolled)[1]
+```
+
+Nombre de données Dealroom trouvées (sirénisées) contrôlées ou non
+```{r}
+dim(D)[1] - dim(DNF)[1]
+100 * (dim(D)[1] - dim(DNF)[1]) / dim(D)[1]
+```
+
+Nombre de données Dealroom trouvées et contrôlées par le departement
+```{r}
+dim(DFu_controlled)[1]
+dim(DFmu_controlled)[1]
+dim(DFmm_controlled_clear)[1]
+dim(DFu_controlled)[1] + dim(DFmu_controlled)[1] + dim(DFmm_controlled_clear)[1]
+100 * (dim(DFu_controlled)[1] + dim(DFmu_controlled)[1] + dim(DFmm_controlled_clear)[1]) / dim(D)[1]
+100 * (dim(DFu_controlled)[1] + dim(DFmu_controlled)[1] + dim(DFmm_controlled_clear)[1]) / (dim(D)[1] - dim(DNF)[1])
+```
+
+```{r}
+DFs = rbind(DFu_controlled, DFmu_controlled)
+DFs = rbind(DFs, DFmm_controlled_clear)
+rm(DF, DNF, DFm, DFmm, DFmm_controlled, DFmm_controlled_clear, DFmm_uncontrolled, DFmu, DFmu_controlled, DFmu_uncontrolled, DFu, DFu_controlled, DFu_uncontrolled)
+```
+
+<!-- Etude de DNF -->
+<!-- ```{r} -->
+<!-- # SIRENb = SIREN[which(SIREN$),] -->
+
+<!-- index = str_detect(SIREN$NAME, "SYNDICAT") -->
+<!-- SIRENb = SIREN[-which(index),] -->
+
+<!-- index = str_detect(SIRENb$NAME, "SYND") -->
+<!-- SIRENb = SIRENb[-which(index),] -->
+<!-- index = str_detect(SIRENb$NAME, "COPROPR") -->
+<!-- SIRENb = SIRENb[-which(index),] -->
+<!-- index = str_detect(SIRENb$NAME, "COPR") -->
+<!-- SIRENb = SIRENb[-which(index),] -->
+<!-- index = str_detect(SIRENb$NAME, "IMMEUBLE") -->
+<!-- SIRENb = SIRENb[-which(index),] -->
+<!-- index = str_detect(SIRENb$NAME, "GESTRIM") -->
+<!-- SIRENb = SIRENb[-which(index),] -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # split = str_split(DNF$NAME, " ") -->
+<!-- # index = str_detect(SIREN$NAME, "1001") -->
+<!-- # length(which(index)) -->
+<!-- a = NULL -->
+
+<!-- for (k in 1:dim(DNF)[1]) { -->
+
+<!--   index = str_detect(SIREN$NAME, as.character(DNF$NAME[k])) -->
+
+<!--   if (length(index) > 0){ -->
+<!--     a = c(a, k) -->
+<!--   } -->
+
+<!-- } -->
+
+<!-- k = 3 -->
+<!-- index = which(str_detect(SIREN$NAME, as.character(DNF$NAME[k]))) -->
+<!-- index[1] -->
+<!-- ``` -->
+
+# Détecter des motifs
+
+```{r}
+#split = str_split(D$NAME, " ")
+
+#a = str_detect(D$NAME, "SEWAN")
+
+for (k in 1:dim(DNF)[1]) {
+  a = str_detect(SIREN$NAME, as.character(DNF$NAME[k]))
+  if(length(which(a)) > 1){
+        DNF$siren[k] = SIREN$siren[which(a)][1]
+      }
+      if(length(which(a)) == 1){
+        DNF$siren[k] = FARE$siren[which(a)]
+      }
+
+}
+  
+  
+  # a = str_detect(FARE$NAME, D$NAME[k])
+  # 
+  # if(length(which(a)) = 1 ){
+  #   D$siren[k] = FARE$siren[which(a)]
+  # }
+  # 
+  
+  # split = str_split(D$NAME[k], " ")
+  # for (l in 1:length(split)){
+  #   a = str_detect(FARE$NAME, split[[1]][l])
+  #   which(a)
+  #   
+  # }
+  
+
+```
+
+
+# Etude de DF
+
+```{r}
+DFv2 = rbind(DFu_controlled, DFmu_controlled)
+DFv2 = rbind(DFv2, DFmm_controlled)
+dim(DFv2)[1]
+```
+
+```{r}
+M = merge(DFv2, FARE, by = "siren")
+m = dim(M)[1]
+m
+```
+
+```{r}
+length(which(M$departement == 75))
+length(which(M$departement == 75)) * 100 / m 
+```
+
+```{r}
+length(which(M$CITY == "PARIS"))
+length(which(M$CITY == "PARIS")) * 100 / m 
+```
+
+```{r}
+length(which(M$ent_cre_daaaammjj >= 2000))
+length(which(M$ent_cre_daaaammjj >= 2000)) * 100 / m
+print("")
+length(which(M$ent_cre_daaaammjj >= 2010))
+length(which(M$ent_cre_daaaammjj >= 2010)) * 100 / m
+print("")
+length(which(M$ent_cre_daaaammjj >= 2017))
+length(which(M$ent_cre_daaaammjj >= 2017)) * 100 / m 
+```
+
+```{r}
+length(which(M$categorie_entreprise == "MICRO"))
+length(which(M$categorie_entreprise == "MICRO")) * 100 / m
+print("")
+
+length(which(M$categorie_entreprise == "PME"))
+length(which(M$categorie_entreprise == "PME")) * 100 / m
+print("")
+
+length(which(M$categorie_entreprise == "ETI"))
+length(which(M$categorie_entreprise == "ETI")) * 100 / m
+print("")
+
+length(which(M$categorie_entreprise == "GE"))
+length(which(M$categorie_entreprise == "GE")) * 100 / m
+print("")
+```
+
+```{r}
+summary(M$redi_r310)
+summary(M$redi_e200)
+```
+
+```{r}
+summary(M$A21)
+```
+
+```{r}
+length(which(M$A21 == "M"))
+length(which(M$A21 == "M")) * 100 / m
+print("Activités scientifiques et techniques")
+
+length(which(M$A21 == "G"))
+length(which(M$A21 == "G")) * 100 / m
+print("Commerce")
+
+length(which(M$A21 == "J"))
+length(which(M$A21 == "J")) * 100 / m
+print("Information et communication")
+```
+
+
+# Sirénisation FARE n°2
+
+```{r}
+N = merge(FARE, D, by = "NAME", all.y =  TRUE)
+
+length(which(is.na(N$NAME)))
+
+dim(D)[1]
+dim(N)[1]
+length(which(duplicated(N$NAME)))
+dim(N)[1] - length(which(duplicated(N$NAME)))
+```
+
+DF : données Dealroom D pour lesquelles 1 ou plusieurs siren a été trouvé
+```{r}
+DF = N[which(!is.na(N$siren)),]
+DF = data.frame(DF, NA)
+colnames(DF)[15] = "siren_found"
+
+length(which(is.na(DF$NAME)))
+length(which(duplicated(DF$NAME)))
+dim(DF)[1] - length(which(duplicated(DF$NAME)))
+```
+
+DNF : données Dealroom D pour lesquelles aucun siren n'a été trouvé
+```{r}
+DNF = N[which(is.na(N$siren)),]
+DNF = data.frame(DNF, "not found")
+colnames(DNF)[15] = "siren_found"
+
+length(which(is.na(DNF$NAME)))
+length(which(duplicated(DNF$NAME)))
+dim(DNF)[1] - length(which(duplicated(DNF$NAME)))
+```
+
+```{r}
+dim(D)[1]
+dim(DF)[1] - length(which(duplicated(DF$NAME))) + dim(DNF)[1]
+```
+
+DFu : données Dealroom D pour lesquelles 1 unique siren a été trouvé
+DFm : données Dealroom D pour lesquelles plusieurs siren ont été trouvés
+```{r}
+index = duplicated(DF$NAME) | duplicated(DF$NAME, fromLast = TRUE)
+
+DF[!index, 15] = "one found"
+DF$siren_found[index] = "many found"
+
+DFu = DF[!index,]
+DFm = DF[index,]
+
+dim(DF)[1]
+dim(DFu)[1] + dim(DFm)[1]
+```
+```{r}
+length(which(duplicated(DFu$NAME)))
+length(which(duplicated(DFm$NAME)))
+```
+
+Sélection des many par le departement
+```{r}
+index = duplicated(DFm$NAME) | duplicated(DFm$NAME, fromLast = TRUE)
+dim(DFm)[1]
+length(index)
+
+index = which(DFm$depcom == DFm$departement)
+
+DFm_controlled = DFm[index,]
+DFm_uncontrolled = DFm[-index,]
+
+dim(DFm_controlled)[1]
+dim(DFm_uncontrolled)[1]
+```
+
+Doublons dans DFm_controlled
+```{r}
+length(which(duplicated(DFm_controlled$NAME)))
+index = which(duplicated(DFm_controlled$NAME))
+DFm_controlled_clear = DFm_controlled[-index,]
+```
+
+DFu_controlled : contrôlé par le departement
+DFu_uncontrolled : non contrôlé par le departement
+```{r}
+index = which(DFu$depcom == DFu$departement)
+
+DFu_controlled = DFu[index,]
+DFu_uncontrolled = DFu[-index,]
+
+dim(DFu)[1]
+dim(DFu_controlled)[1] + dim(DFu_uncontrolled)[1]
+```
+
+Nombre de données Dealroom trouvées (sirénisées) contrôlées ou non
+```{r}
+dim(D)[1] - dim(DNF)[1]
+100 * (dim(D)[1] - dim(DNF)[1]) / dim(D)[1]
+```
+
+Nombre de données Dealroom trouvées et contrôlées par le departement
+```{r}
+dim(DFu_controlled)[1]
+dim(DFm_controlled_clear)[1]
+dim(DFu_controlled)[1] + dim(DFm_controlled_clear)[1]
+100 * (dim(DFu_controlled)[1] + dim(DFm_controlled_clear)[1]) / dim(D)[1]
+100 * (dim(DFu_controlled)[1] + dim(DFm_controlled_clear)[1]) / (dim(D)[1] - dim(DNF)[1])
+```
+
+```{r}
+DFf = rbind(DFu_controlled, DFm_controlled_clear)
+rm(DF, DNF, DFm, DFm_controlled, DFm_controlled_clear, DFm_uncontrolled, DFu, DFu_controlled, DFu_uncontrolled)
+```
+
+# Etude de DNF (FARE n°2)
+```{r}
+# split = str_split(DNF$NAME, " ")
+# index = str_detect(SIREN$NAME, "1001")
+# length(which(index))
+a = NULL
+
+for (k in 1:dim(DNF)[1]) {
+  
+  index = str_detect(FARE$NAME, as.character(DNF$NAME[k]))
+  
+  if (length(which(index)) > 0){
+    a = c(a, k)
+  }
+
+}
+
+index_name_found = a
+```
+
+```{r}
+k = 33
+index = str_detect(FARE$NAME, as.character(DNF$NAME[k]))
+length(which(index))
+dim(DNF)[1]
+DNF[k,]
+FARE[index,]
+```
+
+```{r}
+DNF$siren_found = as.character(DNF$siren_found)
+for (i in 3:length(index_name_found)) {
+  
+  k = index_name_found[i]
+  
+  index = str_detect(FARE$NAME, as.character(DNF$NAME[k]))
+  
+  A = FARE[index,]
+  B = DNF[k,]
+  A = A[which(A$depcom == B$departement),]
+  
+  if(dim(A)[1] == 1){
+    
+    DNF$depcom[k] = A$depcom[1]
+    DNF$diff_ul[k] = 1
+    DNF$ent_cre_daaaammjj[k] = A$ent_cre_daaaammjj[1]
+    DNF$redi_e200[k] = A$redi_e200[1]
+    DNF$redi_r310[k] = A$redi_r310[1]
+    DNF$siren[k] = A$siren[1]
+    DNF$categorie_entreprise[k] = A$categorie_entreprise[1]
+    DNF$A21[k] = A$A21[1]
+    DNF$siren_found[k] = A$NAME[1]
+    
+  }
+
+}
+```
+
+```{r}
+index = which(!is.na(DNF$siren))
+A = DNF[index, c(1,5,12,13,15)]
+```
+
+```{r}
+which(as.numeric(rownames(DNF)) == 73)
+```
+
+
+
+
+
+
+
+
+
